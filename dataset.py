@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from PIL import Image
 
-class VOCDataset(torch.utils.data.Datasets):
+class VOCDataset(torch.utils.data.Dataset):
     def __init__(
         self, csv_file, img_dir, label_dir, S=7,
         B=2, C=20, transform=None
@@ -23,7 +23,7 @@ class VOCDataset(torch.utils.data.Datasets):
         label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
         boxes = []
         with open(label_path) as f:
-            for label in f.readlines:
+            for label in f.readlines():
                 class_label, x, y, width, height = [
                     float(x) if float(x) != int(float(x)) else int(x)
                     for x in label.replace("\n", "").split()

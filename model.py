@@ -93,9 +93,3 @@ class Yolov1(nn.Module):
             nn.Linear(496, S * S * (C + B * 5)), # it was 4096 in original paper
         ) # to be reshaped as (S, S, C + B * 5 = 30)
     
-def test(S=7, B=2, C=20):
-    model = Yolov1(S = S, B = B, C = C)
-    x = torch.randn((2, 3, 448, 448))
-    print(model(x).shape)
-    
-test()

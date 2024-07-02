@@ -21,14 +21,14 @@ from utils import (
     save_checkpoint,
     load_checkpoint,
 )
-from loss import YoloLoss
+from loss import yololoss
 
 seed = 123
 torch.manual_seed(seed)
 
 # Hyperparameters etc. 
 LEARNING_RATE = 2e-5
-DEVICE = "cuda" if torch.cuda.is_available else "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 16 
 WEIGHT_DECAY = 0
 EPOCHS = 1000
@@ -47,11 +47,10 @@ class Compose(object):
     def __call__(self, img, bboxes):
         for t in self.transforms:
             img, bboxes = t(img), bboxes
-
         return img, bboxes
 
 
-transform = Compose([transforms.Resize((448, 448)), transforms.ToTensor(),])
+transform = Compose([transforms.Resize((448, 448)), transforms.ToTensor()])
 
 
 def train_fn(train_loader, model, optimizer, loss_fn):
@@ -73,11 +72,12 @@ def train_fn(train_loader, model, optimizer, loss_fn):
 
 
 def main():
-    model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
+    torch.autograd.set_detect_anomaly(True)
+    model = Yolov1(S=7, B=2, C=20).to(DEVICE)
     optimizer = optim.Adam(
         model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
-    loss_fn = YoloLoss()
+    loss_fn = yololoss()
 
     if LOAD_MODEL:
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
@@ -90,7 +90,10 @@ def main():
     )
 
     test_dataset = VOCDataset(
-        "data/test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
+        "data/test.csv", 
+        transform=transform, 
+        img_dir=IMG_DIR, 
+        label_dir=LABEL_DIR,
     )
 
     train_loader = DataLoader(
@@ -120,7 +123,7 @@ def main():
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
         )
         print(f"Train mAP: {mean_avg_prec}")
-
+        print("Epoch: ", epoch)
         train_fn(train_loader, model, optimizer, loss_fn)
 
 
